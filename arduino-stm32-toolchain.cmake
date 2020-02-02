@@ -4,8 +4,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY) # dont try to build shared libs
 MESSAGE(STATUS "Loading arduino stm32 core...")
 include(arduino-stm32-version)
-SET(STM32_BOARD_DEFS "-DSTM32F1xx -DARDUINO=10810 -DARDUINO_BLUEPILL_F103C6 -DARDUINO_ARCH_STM32 -DBOARD_NAME=BLUEPILL_F103C6 -DSTM32F103x6 -DHAL_UART_MODULE_ENABLED ")
-SET(STM32_CORE_CFLAGS_COMMON "-g -mcpu=cortex-m3 -mthumb  -ffunction-sections -fdata-sections -nostdlib --param max-inline-insns-single=500 ")
+SET(STM32_BOARD_DEFS "-DSTM32F1xx -DARDUINO=10810 -DARDUINO_ARCH_STM32 -DHAL_UART_MODULE_ENABLED ")
+SET(STM32_BOARD_DEFS "${STM32_BOARD_DEFS} -DARDUINO_BLUEPILL_F103C8 -DBOARD_NAME=BLUEPILL_F103C8 -DSTM32F103xB")
+SET(STM32_BOARD_MAX_RAM 20480)
+SET(STM32_BOARD_MAX_FLASH 131072)
+
+
+SET(STM32_CORE_CFLAGS_COMMON "-g -O2 -mcpu=cortex-m3 -mthumb  -ffunction-sections -fdata-sections -nostdlib --param max-inline-insns-single=500 ")
 #
 SET(STM32_CORE_CFLAGS "${STM32_CORE_CFLAGS_COMMON} ${STM32_BOARD_DEFS}")
 SET(STM32_CORE_CXXFLAGS "${STM32_CORE_CFLAGS_COMMON}  ${STM32_BOARD_DEFS} -fno-rtti -fno-exceptions -fno-use-cxa-atexit -std=gnu++14 -fno-threadsafe-statics ")
@@ -29,7 +34,8 @@ SET(CMAKE_C_COMPILER   "${STM32_CORE_TOOLCHAIN_PATH}/${STM32_CORE_TOOLCHAIN_PREF
 SET(CMAKE_ASM_COMPILER "${STM32_CORE_TOOLCHAIN_PATH}/${STM32_CORE_TOOLCHAIN_PREFIX}gcc"    CACHE PATH "" FORCE)
 SET(CMAKE_CXX_COMPILER "${STM32_CORE_TOOLCHAIN_PATH}/${STM32_CORE_TOOLCHAIN_PREFIX}g++"    CACHE PATH "" FORCE)
 SET(CMAKE_AR           "${STM32_CORE_TOOLCHAIN_PATH}/${STM32_CORE_TOOLCHAIN_PREFIX}ar"     CACHE PATH "" FORCE)
-SET(CMAKE_RANLING      "${STM32_CORE_TOOLCHAIN_PATH}/${STM32_CORE_TOOLCHAIN_PREFIX}ranlib" CACHE PATH "" FORCE)
+SET(CMAKE_RANLIB       "${STM32_CORE_TOOLCHAIN_PATH}/${STM32_CORE_TOOLCHAIN_PREFIX}ranlib" CACHE PATH "" FORCE)
+SET(CMAKE_OBJCOPY      "${STM32_CORE_TOOLCHAIN_PATH}/${STM32_CORE_TOOLCHAIN_PREFIX}objcopy" CACHE PATH "" FORCE)
 #
 SET(CMAKE_CXX_LINK_FLAGS "" CACHE INTERNAL "")
 SET(CMAKE_EXECUTABLE_SUFFIX_C   .elf CACHE INTERNAL "")
@@ -37,11 +43,12 @@ SET(CMAKE_EXECUTABLE_SUFFIX_CXX .elf CACHE INTERNAL "")
 #
 
 #
+# Override compilation & link command
 #
-SET(LINK_FLAGS "  --specs=nano.specs -Wl,--defsym=LD_FLASH_OFFSET=0 -Wl,--defsym=LD_MAX_SIZE=32768 -Wl,--defsym=LD_MAX_DATA_SIZE=10240 -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common " CACHE INTERNAL "" FORCE)
-set(LINK_PATH     " -L${STM32_CORE_PATH}/tools/CMSIS/${STM32_CMIS_TARGET}/CMSIS/DSP/Lib/GCC/")
+SET(LINK_FLAGS " -mcpu=cortex-m3 -mthumb -Os  --specs=nano.specs   -u _printf_float -u _scanf_float  -Wl,--defsym=LD_FLASH_OFFSET=0 -Wl,--defsym=LD_MAX_SIZE=${STM32_BOARD_MAX_FLASH} -Wl,--defsym=LD_MAX_DATA_SIZE=${STM32_BOARD_MAX_RAM} -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common " CACHE INTERNAL "" FORCE)
+set(LINK_PATH     " -L${STM32_CORE_PATH}/tools/CMSIS/${STM32_CMIS_TARGET}/CMSIS/DSP/Lib/GCC/" CACHE INTERNAL "" FORCE)
 
-set(CMAKE_CXX_LINK_EXECUTABLE     "<CMAKE_C_COMPILER>   ${LINK_FLAGS} -T${STM32_CORE_PATH}/hardware/stm32/${STM32_CORE_VERSION}/variants/${STM32_CORE_TARGET}/ldscript.ld -Wl,-Map,<TARGET>.map ${LINK_PATH}  -larm_cortexM3l_math -o <TARGET>  -Wl,--start-group <OBJECTS> <LINK_LIBRARIES> -lc -Wl,--end-group -lm -lgcc -lstdc++ -g")
+set(CMAKE_CXX_LINK_EXECUTABLE     "<CMAKE_C_COMPILER>   ${LINK_FLAGS} -T${STM32_CORE_PATH}/hardware/stm32/${STM32_CORE_VERSION}/variants/${STM32_CORE_TARGET}/ldscript.ld -Wl,-Map,<TARGET>.map ${LINK_PATH}  -larm_cortexM3l_math  -Wl,--start-group  -o <TARGET>  <OBJECTS> <LINK_LIBRARIES> -lc -Wl,--end-group -lm -lgcc -lstdc++ -g")
 
 #
 set(CMAKE_C_COMPILE_OBJECT        "<CMAKE_C_COMPILER> -c <FLAGS> -o <OBJECT>  -c <SOURCE>")
@@ -73,3 +80,4 @@ SET(CMAKE_C_FLAGS "${STM32_CORE_CFLAGS} ${IFLAGS}"     CACHE STRING "")
 SET(CMAKE_CXX_FLAGS "${STM32_CORE_CXXFLAGS} ${IFLAGS}" CACHE STRING "")
 SET(CMAKE_ASM_FLAGS "${STM32_CORE_CFLAGS} ${IFLAGS}"   CACHE STRING "")
 
+# Toolchain ready!
