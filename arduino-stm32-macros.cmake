@@ -6,7 +6,7 @@ MESSAGE(STATUS "Defining Macros..")
 #
 MACRO(GENERATE_FIRMWARE  Target)
     add_executable(${Target} ${ARGN})
-    target_link_libraries(${Target} srcWrapper srcCores srcVariant )
+    target_link_libraries(${Target} srcWrapper srcCores srcVariant srcLibraries)
     add_custom_command(TARGET ${Target} POST_BUILD
             COMMAND ${CMAKE_OBJCOPY}
             ARGS -Oihex

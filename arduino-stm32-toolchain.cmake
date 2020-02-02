@@ -7,7 +7,7 @@ include(arduino-stm32-version)
 
 include(target_${STM32_CORE_TARGET})
 
-SET(STM32_BOARD_DEFS "-DSTM32F1xx -DARDUINO=10810 -DARDUINO_ARCH_STM32 -DHAL_UART_MODULE_ENABLED ")
+SET(STM32_BOARD_DEFS "-DSTM32F1xx -DARDUINO=10810 -DARDUINO_ARCH_STM32 -DHAL_UART_MODULE_ENABLED -D__STM32F1__")
 SET(STM32_BOARD_DEFS "${STM32_BOARD_DEFS} ${STM32_BOARD_SPEC_DEFS}")
 
 
@@ -74,6 +74,13 @@ SET(IFLAGS "${IFLAGS} -I${STM32_CORE_PATH}/tools/CMSIS/${STM32_CMIS_TARGET}/CMSI
 FOREACH(incl cores/arduino/stm32 cores/arduino/stm32/LL cores/arduino/stm32/usb cores/arduino/stm32/usb/hid cores/arduino/stm32/usb/cdc system/Drivers/STM32F1xx_HAL_Driver/Inc system/Drivers/STM32F1xx_HAL_Driver/Src system/STM32F1xx system/Middlewares/ST/STM32_USB_Device_Library/Core/Inc system/Middlewares/ST/STM32_USB_Device_Library/Core/Src system/Drivers/CMSIS/Device/ST/STM32F1xx/Include/ system/Drivers/CMSIS/Device/ST/STM32F1xx/Source/Templates/gcc/ cores/arduino variants/${STM32_BOARD_FAMILY} libraries/SrcWrapper/src )
     SET(IFLAGS "${IFLAGS} -I${STM32_EXTENDED_PATH}/${incl}")
 ENDFOREACH()
+#
+# Libraries
+FOREACH(incl  SPI Wire  )
+    SET(IFLAGS "${IFLAGS} -I${STM32_EXTENDED_PATH}/libraries/${incl}/src")
+ENDFOREACH()
+
+
 #
 #
 SET(CMAKE_C_FLAGS "${STM32_CORE_CFLAGS} ${IFLAGS}"     CACHE STRING "")
