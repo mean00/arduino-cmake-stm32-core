@@ -2,6 +2,7 @@
 # Generate STM32Core
 #
 include(arduino-stm32-version)
+include(target_${STM32_CORE_TARGET})
 
 MESSAGE(STATUS "Preparing LibWrapper")
 MESSAGE(STATUS "Module path ${CMAKE_MODULE_PATH}")
@@ -29,7 +30,7 @@ add_library(srcCores STATIC ${CORES_WRAPPER})
 
 #
 include(srcVariant_PILL_F103XX)
-SET(STM32_VARIANT_SRC_PATH ${STM32_CORE_PATH}/hardware/stm32/${STM32_CORE_VERSION}/variants/${STM32_CORE_TARGET}/)
+SET(STM32_VARIANT_SRC_PATH ${STM32_CORE_PATH}/hardware/stm32/${STM32_CORE_VERSION}/variants/${STM32_BOARD_FAMILY}/)
 FOREACH(wrapper ${LIBCORE_VARIANT_y})
     SET(VARIANT_WRAPPER  ${VARIANT_WRAPPER} ${STM32_VARIANT_SRC_PATH}/${wrapper})
 ENDFOREACH()
