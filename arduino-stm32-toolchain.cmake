@@ -1,12 +1,11 @@
 #
-SET(STM32_CORE_VERSION 1.8.0 CACHE INTERNAL "")
-SET(STM32_CMIS_TARGET  5.5.1 CACHE INTERNAL "")
 #
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY) # dont try to build shared libs
 MESSAGE(STATUS "Loading arduino stm32 core...")
+include(arduino-stm32-version)
 SET(STM32_BOARD_DEFS "-DSTM32F1xx -DARDUINO=10810 -DARDUINO_BLUEPILL_F103C6 -DARDUINO_ARCH_STM32 -DBOARD_NAME=BLUEPILL_F103C6 -DSTM32F103x6 -DHAL_UART_MODULE_ENABLED ")
-SET(STM32_CORE_CFLAGS_COMMON "-mcpu=cortex-m3 -mthumb  -ffunction-sections -fdata-sections -nostdlib --param max-inline-insns-single=500 ")
+SET(STM32_CORE_CFLAGS_COMMON "-g -mcpu=cortex-m3 -mthumb  -ffunction-sections -fdata-sections -nostdlib --param max-inline-insns-single=500 ")
 #
 SET(STM32_CORE_CFLAGS "${STM32_CORE_CFLAGS_COMMON} ${STM32_BOARD_DEFS}")
 SET(STM32_CORE_CXXFLAGS "${STM32_CORE_CFLAGS_COMMON}  ${STM32_BOARD_DEFS} -fno-rtti -fno-exceptions -fno-use-cxa-atexit -std=gnu++14 -fno-threadsafe-statics ")
@@ -33,8 +32,18 @@ SET(CMAKE_AR           "${STM32_CORE_TOOLCHAIN_PATH}/${STM32_CORE_TOOLCHAIN_PREF
 SET(CMAKE_RANLING      "${STM32_CORE_TOOLCHAIN_PATH}/${STM32_CORE_TOOLCHAIN_PREFIX}ranlib" CACHE PATH "" FORCE)
 #
 SET(CMAKE_CXX_LINK_FLAGS "" CACHE INTERNAL "")
+SET(CMAKE_EXECUTABLE_SUFFIX_C   .elf CACHE INTERNAL "")
+SET(CMAKE_EXECUTABLE_SUFFIX_CXX .elf CACHE INTERNAL "")
 #
-set(CMAKE_CXX_LINK_EXECUTABLE     "<CMAKE_CXX_COMPILER>   <CMAKE_CXX_LINK_FLAGS>  <LINK_FLAGS> -lgcc -mthumb -Wl,--start-group  <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group   -o <TARGET> ")
+
+#
+#
+SET(LINK_FLAGS "  --specs=nano.specs -Wl,--defsym=LD_FLASH_OFFSET=0 -Wl,--defsym=LD_MAX_SIZE=32768 -Wl,--defsym=LD_MAX_DATA_SIZE=10240 -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common " CACHE INTERNAL "" FORCE)
+set(LINK_PATH     " -L${STM32_CORE_PATH}/tools/CMSIS/${STM32_CMIS_TARGET}/CMSIS/DSP/Lib/GCC/")
+
+set(CMAKE_CXX_LINK_EXECUTABLE     "<CMAKE_C_COMPILER>   ${LINK_FLAGS} -T${STM32_CORE_PATH}/hardware/stm32/${STM32_CORE_VERSION}/variants/${STM32_CORE_TARGET}/ldscript.ld -Wl,-Map,<TARGET>.map ${LINK_PATH}  -larm_cortexM3l_math -o <TARGET>  -Wl,--start-group <OBJECTS> <LINK_LIBRARIES> -lc -Wl,--end-group -lm -lgcc -lstdc++ -g")
+
+#
 set(CMAKE_C_COMPILE_OBJECT        "<CMAKE_C_COMPILER> -c <FLAGS> -o <OBJECT>  -c <SOURCE>")
 SET(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> cr <TARGET> <LINK_FLAGS> <OBJECTS> "
                                   "<CMAKE_RANLIB> <TARGET> ")
@@ -62,4 +71,5 @@ ENDFOREACH()
 #
 SET(CMAKE_C_FLAGS "${STM32_CORE_CFLAGS} ${IFLAGS}"     CACHE STRING "")
 SET(CMAKE_CXX_FLAGS "${STM32_CORE_CXXFLAGS} ${IFLAGS}" CACHE STRING "")
+SET(CMAKE_ASM_FLAGS "${STM32_CORE_CFLAGS} ${IFLAGS}"   CACHE STRING "")
 

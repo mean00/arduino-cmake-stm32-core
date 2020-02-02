@@ -34,6 +34,8 @@ SET(LIBCORE_SRC_y
 ./stm32/usb/usbd_ep_conf.c
 ./stm32/usb/usbd_if.c
 ./HardwareSerial.cpp
-./wiring_time.c)
+./wiring_time.c
+./stm32/startup_stm32yyxx.S
+)
 #./IPAddress.cpp)
 
