@@ -1,6 +1,8 @@
 #
 # Generate STM32Core
 #
+include(arduino-stm32-version)
+
 MESSAGE(STATUS "Preparing LibWrapper")
 MESSAGE(STATUS "Module path ${CMAKE_MODULE_PATH}")
 SET(STM32_CORE_DEFINED TRUE CACHE BOOL "" FORCE)
