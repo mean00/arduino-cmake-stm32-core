@@ -1,18 +1,18 @@
 IF(NOT DEFINED STM32_CORE_DEFINED)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY) # dont try to build shared libs
 MESSAGE(STATUS "Loading arduino stm32 core...")
 SET(STM32_CORE_DEFINED TRUE CACHE BOOL "" FORCE)
 SET(STM32_BOARD_DEFS "-DSTM32F1xx -DARDUINO=10810 -DARDUINO_BLUEPILL_F103C6 -DARDUINO_ARCH_STM32 -DBOARD_NAME=BLUEPILL_F103C6 -DSTM32F103x6 -DHAL_UART_MODULE_ENABLED ")
 
 SET(STM32_CORE_CFLAGS_COMMON "-mcpu=cortex-m3 -mthumb  -ffunction-sections -fdata-sections -nostdlib --param max-inline-insns-single=500 ")
-SET(STM32_CORE_CFLAGS "${STM32_CORE_CFLAGS_COMMON} ${BOARD_DEFS}")
-SET(STM32_CORE_CXXFLAGS "${STM32_CORE_CFLAGS_COMMON}  ${BOARD_DEFS} -fno-rtti -fno-exceptions -fno-use-cxa-atexit -std=gnu++14 -fno-threadsafe-statics ")
+SET(STM32_CORE_CFLAGS "${STM32_CORE_CFLAGS_COMMON} ${STM32_BOARD_DEFS}")
+SET(STM32_CORE_CXXFLAGS "${STM32_CORE_CFLAGS_COMMON}  ${STM32_BOARD_DEFS} -fno-rtti -fno-exceptions -fno-use-cxa-atexit -std=gnu++14 -fno-threadsafe-statics ")
 
 SET(STM32_CORE_VERSION 1.8.0 CACHE INTERNAL "")
 SET(STM32_CMIS_TARGET 5.5.1 CACHE INTERNAL "")
 
 SET(STM32_CORE_TOOLCHAIN_PREFIX arm-none-eabi- CACHE INTERNAL "" )
-
 # Lock platformConfig in cache
 MESSAGE(STATUS "Toolchain ${STM32_CORE_TOOLCHAIN_PATH}")
 MESSAGE(STATUS "Arduino core ${STM32_CORE_PATH}")
@@ -50,10 +50,9 @@ MESSAGE(STATUS "C++ compiler ${CMAKE_CXX_COMPILER}")
 #
 # Setup Stm32 Core include folders
 #
-include_directories( ${STM32_CORE_PATH}/tools/CMIS/${STM32_CMIS_TARGET}/Core/Include)
-include_directories( ${STM32_CORE_PATH}/tools/CMIS/${STM32_CMIS_TARGET}/DSP/Include)
-
 SET(STM32_EXTENDED_PATH ${STM32_CORE_PATH}/hardware/stm32/${STM32_CORE_VERSION})
+SET(IFLAGS "${IFLAGS} -I${STM32_CORE_PATH}/tools/CMSIS/${STM32_CMIS_TARGET}/CMSIS/Core/Include")
+SET(IFLAGS "${IFLAGS} -I${STM32_CORE_PATH}/tools/CMSIS/${STM32_CMIS_TARGET}/CMSIS/DSP/Include")
 
 FOREACH(incl cores/arduino/stm32 cores/arduino/stm32/LL cores/arduino/stm32/usb cores/arduino/stm32/usb/hid cores/arduino/stm32/usb/cdc system/Drivers/STM32F1xx_HAL_Driver/Inc system/Drivers/STM32F1xx_HAL_Driver/Src system/STM32F1xx system/Middlewares/ST/STM32_USB_Device_Library/Core/Inc system/Middlewares/ST/STM32_USB_Device_Library/Core/Src system/Drivers/CMSIS/Device/ST/STM32F1xx/Include/ system/Drivers/CMSIS/Device/ST/STM32F1xx/Source/Templates/gcc/ cores/arduino variants/${STM32_CORE_TARGET} libraries/SrcWrapper/src )
     SET(IFLAGS "${IFLAGS} -I${STM32_EXTENDED_PATH}/${incl}")
@@ -66,14 +65,14 @@ SET(CMAKE_CXX_FLAGS "${STM32_CORE_CXXFLAGS} ${IFLAGS}" CACHE STRING "")
 # Generate STM32Core
 #
 MESSAGE(STATUS "Preparing LibWrapper")
-SET(LIBWRAPPER_SRC_z
-/home/fx/.arduino15/packages/STM32/hardware/stm32/1.8.0/libraries/SrcWrapper/src/HAL/stm32yyxx_hal_i2s.c)
+MESSAGE(STATUS "Module path ${CMAKE_MODULE_PATH}")
+include(core_files)
 
-FOREACH(wrapper ${LIBWRAPPER_SRC_x})
-    LIST(APPEND ALL_WRAPPER  ${STM32_CORE_PATH}/hardware/stm32/${STM32_CORE_VERSION}/libraries/SrcWrapper/${wrapper})
+FOREACH(wrapper ${LIBWRAPPER_SRC_y})
+    SET(ALL_WRAPPER ${ALL_WRAPPER} ${STM32_CORE_PATH}/hardware/stm32/${STM32_CORE_VERSION}/libraries/SrcWrapper/${wrapper})
 ENDFOREACH()
-MESSAGE(STATUS "Wrapper : ${LIBWRAPPER_SRC_z}")
-add_library(CoreSrcWrapper STATIC ${LIBWRAPPER_SRC_z})
+SET(ALL_2 /home/fx/.arduino15/packages/STM32//hardware/stm32/1.8.0/libraries/SrcWrapper/src/HAL/stm32yyxx_hal_i2s.c)
+add_library(CoreSrcWrapper STATIC ${ALL_2})
 
 
 ENDIF() 
